@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import Search from './components/Search';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -49,6 +50,7 @@ function App() {
       <h2>{message}</h2>
     </div>
       </header>
+      <Search/>
     </div>
   );
 }

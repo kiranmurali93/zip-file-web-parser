@@ -1,16 +1,16 @@
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 require('dotenv').config();
 const AWS = require('aws-sdk');
 const { Pool } = require('pg');
 const multer = require('multer');
 const fs = require('fs');
-var path = require('path')
-const cors = require('cors')
+var path = require('path');
+const cors = require('cors');
 
 const app = express();
-app.use(bodyParser.json({ type: ["application/json"] }));
-app.use(cors())
+app.use(bodyParser.json({ type: ['application/json'] }));
+app.use(cors());
 const port = process.env.PORT || 3001;
 
 const s3 = new AWS.S3({
@@ -25,12 +25,12 @@ const pool = new Pool({
 
 var storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/')
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)) //Appending extension
-  }
-})
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
 
 const upload = multer({ storage: storage });
 
@@ -84,6 +84,22 @@ app.post('/save-metadata', async (req, res) => {
     res.status(500).json({ error: 'Error saving metadata' });
   } finally {
     client.release();
+  }
+});
+
+app.get('/search', async (req, res) => {
+  const { searchTerm } = req.query;
+  if (!searchTerm) {
+    res.status(400).json({ error: 'Provide a search text' });
+  }
+
+  let query = `SELECT * FROM file_metadata WHERE file_name ILIKE '%${searchTerm}%' OR file_type ILIKE '%${searchTerm}%'`;
+
+  try {
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
